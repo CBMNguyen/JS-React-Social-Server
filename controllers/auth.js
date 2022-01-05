@@ -6,14 +6,22 @@ const serverError = require("../utils/serverError");
 // Register
 module.exports.register = async (req, res) => {
   try {
+    // check email
     const email = await User.findOne({ email: req.body.email });
     if (email) return res.status(409).json({ message: "email already exist" });
+
+    // check phone number
+    const phone = await User.findOne({ phone: req.body.phone });
+    if (phone) return res.status(409).json({ message: "phone already exist" });
+
     // hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
     // create new user
     const newUser = await new User({
       username: req.body.username,
+      phone: req.body.phone,
       email: req.body.email,
       password: hashedPassword,
     });
@@ -21,6 +29,7 @@ module.exports.register = async (req, res) => {
     const user = await newUser.save();
     res.status(201).json({ message: "Sign up successful", user });
   } catch (error) {
+    console.log(error);
     serverError(res, error);
   }
 };
